@@ -11,6 +11,8 @@ const nameBInput = document.querySelector("#name-b");
 const readingLabel = document.querySelector("#reading-label");
 const fortuneTitle = document.querySelector("#fortune-title");
 const fortuneMessage = document.querySelector("#fortune-message");
+const lineTip = document.querySelector("#line-tip");
+const lineMessage = document.querySelector("#line-message");
 const fortuneSpell = document.querySelector("#fortune-spell");
 const fortuneScore = document.querySelector("#fortune-score");
 const fortuneAction = document.querySelector("#fortune-action");
@@ -36,6 +38,7 @@ const comets = [];
 const ribbons = [];
 const lenses = [];
 const lightnings = [];
+const soulStars = [];
 let stormFlash = 0;
 let latestFortuneAt = 0;
 let readingCount = 0;
@@ -84,7 +87,24 @@ const fortunes = [
 ];
 
 const labels = ["今日の兆し", "星の返事", "雷の助言", "今夜の導き"];
-const constellations = ["雷魚座", "月雫座", "夜風座", "流砂座", "白火座", "星猫座", "遠灯座", "小嵐座"];
+const constellations = [
+  "雷魚座",
+  "月雫座",
+  "夜風座",
+  "流砂座",
+  "白火座",
+  "星猫座",
+  "遠灯座",
+  "小嵐座",
+  "双花座",
+  "朝露座",
+  "薄雲座",
+  "秘密座",
+  "淡雪座",
+  "金糸座",
+  "小惑星座",
+  "夕凪座",
+];
 const spells = [
   "迷いは小さく砕いて、星屑として進め。",
   "焦げた願いほど、次の光を知っている。",
@@ -96,7 +116,22 @@ const spells = [
   "夜の端っこに、返事はもう置いてある。",
 ];
 const comboTitles = ["一回目の星読み", "二連星モード", "三雷覚醒", "星雷ループ"];
-const loveTitles = ["引力強めの二連星", "近づくほど光る相性", "雷が走る予感", "ゆっくり育つ星雲", "似てないから惹かれる軌道", "偶然が味方する距離"];
+const loveTitles = [
+  "引力強めの二連星",
+  "近づくほど光る相性",
+  "雷が走る予感",
+  "ゆっくり育つ星雲",
+  "似てないから惹かれる軌道",
+  "偶然が味方する距離",
+  "返信から始まる小さな銀河",
+  "目が合うたび軌道が変わる",
+  "じわっと温度が上がる関係",
+  "不意打ちに弱い恋の配置",
+  "安心と刺激のハーフムーン",
+  "まだ名前のない二人の星座",
+  "遠回りが効く恋の回路",
+  "言葉より空気で近づく相性",
+];
 const loveMessages = [
   "会話のテンポが鍵です。短いやり取りでも、気持ちの温度が伝わりやすい組み合わせです。",
   "急ぎすぎると星が散ります。相手のペースを尊重すると、自然に距離が縮まります。",
@@ -104,6 +139,16 @@ const loveMessages = [
   "一緒に何かを作ると運気が上がります。小さな予定や共通の遊びが火種になります。",
   "沈黙も悪くない組み合わせです。無理に盛り上げず、安心できる空気を大切に。",
   "タイミングが合うほど強く光ります。誘うなら軽く、でも言葉はまっすぐが吉です。",
+  "相手の反応を読みすぎない方がうまくいきます。素直な一文が、変な駆け引きより強い日です。",
+  "ふたりの距離は急に縮めるより、何度か自然に接点を作る方が安定します。",
+  "冗談や軽い話題から本音が出やすい相性です。重く始めないのが今日のコツです。",
+  "相手は意外と細かい優しさを見ています。大きな言葉より、気づいている姿勢が効きます。",
+  "今は押すより、思い出してもらう方が強い流れです。短く印象に残る連絡が合います。",
+  "共通点より違いの方にヒントがあります。知らない一面を聞くと、空気が動きます。",
+  "少し照れるくらいの言葉に運があります。まっすぐすぎる一言が、今日は悪くありません。",
+  "一度止まっていた会話にも火が戻りやすい日です。再開のきっかけを軽く投げてみてください。",
+  "相手の生活リズムに合わせると届きやすい相性です。タイミングを選ぶだけで印象が変わります。",
+  "気持ちを全部言わなくても大丈夫です。余白のある言葉が、相手の想像を誘います。",
 ];
 const loveSpells = [
   "近づきすぎず、でも目を逸らさない。",
@@ -112,7 +157,73 @@ const loveSpells = [
   "返信より、余韻を大事にする。",
   "言えない気持ちは、やさしい行動に変える。",
   "今日は小さな勇気が、恋の雷になる。",
+  "押すより、届く角度を探す。",
+  "軽い言葉に、本音を一滴だけ混ぜる。",
+  "待つ時間も、恋の演出にする。",
+  "相手の沈黙を悪者にしない。",
+  "誘いは短く、気持ちはやわらかく。",
+  "照れたまま送る言葉ほど、星に近い。",
+  "完璧な文より、今の温度を送る。",
+  "距離は詰めるより、灯りを置く。",
 ];
+const relationTypes = [
+  "追い風型",
+  "じわ育ち型",
+  "刺激型",
+  "安心型",
+  "再会型",
+  "冒険型",
+  "余韻型",
+  "照れ隠し型",
+  "会話復活型",
+  "急接近注意型",
+  "ほっとする型",
+  "片思い加速型",
+];
+const lineTemplates = {
+  high: [
+    "{name}、今日ちょっと話したいな。少しだけ時間ある？",
+    "{name}と話すと元気出るから、また近いうちに話したい。",
+    "今日ふと思い出した。{name}は最近どうしてる？",
+    "今度、軽くごはんかお茶行かない？{name}と話したい。",
+    "{name}に聞いてほしい話ある。今度ちょっとだけ会える？",
+    "なんか今日、{name}と話したい気分だった。",
+    "{name}といる時の空気、けっこう好きなんだよね。",
+    "今度の休み、少しだけ一緒に出かけない？",
+    "急だけど、{name}の声聞きたくなった。",
+    "最近ちゃんと言えてなかったけど、{name}と話す時間好き。",
+    "今度会えたらうれしい。短い時間でもいいから。",
+    "{name}と行きたい場所見つけた。送ってもいい？",
+  ],
+  middle: [
+    "{name}、最近どう？無理してない？",
+    "ちょっと聞きたいことあるんだけど、今度話せる？",
+    "この前の話、少し気になってた。{name}の続き聞きたい。",
+    "急にごめん。今日なんとなく{名前}に連絡したくなった。",
+    "{name}が好きそうなの見つけたから送るね。",
+    "この前言ってたやつ、どうなった？ちょっと気になってた。",
+    "今日ちょっと疲れたから、{name}の話聞きたくなった。",
+    "今度タイミング合ったら、少し話そう。",
+    "これ見て{名前}思い出した。たぶん好きそう。",
+    "最近ばたばたしてた？落ち着いたら話そ。",
+    "短くていいから、近況聞かせて。",
+    "{name}に相談したいことある。重くないやつ。",
+  ],
+  slow: [
+    "{name}、元気？返事いつでも大丈夫。",
+    "久しぶり。最近どうしてるかなと思って連絡してみた。",
+    "無理に返さなくていいんだけど、ちょっと思い出した。",
+    "{name}のペースで大丈夫。また話せたらうれしい。",
+    "急にごめんね。元気にしてるかなと思って。",
+    "返事急がなくていいよ。ちょっと近況聞きたかっただけ。",
+    "久しぶりに話したくなった。時間ある時で大丈夫。",
+    "元気ならそれでいいんだけど、少し気になって連絡した。",
+    "最近寒い/暑いけど体調大丈夫？無理しないでね。",
+    "ふと思い出したから連絡してみた。返せる時でいいよ。",
+    "またいつかゆっくり話せたらうれしい。",
+    "{name}の近況、聞けたらうれしい。急がないよ。",
+  ],
+};
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -125,6 +236,17 @@ function textSeed(value) {
     hash = Math.imul(hash, 16777619);
   }
   return Math.abs(hash >>> 0);
+}
+
+function daySeed() {
+  const now = new Date();
+  return now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
+}
+
+function pickLineMessage(name, score, wave) {
+  const tier = score >= 82 ? "high" : score >= 68 ? "middle" : "slow";
+  const options = lineTemplates[tier];
+  return options[Math.floor(wave * 4.3) % options.length].replaceAll("{name}", name).replaceAll("{名前}", name);
 }
 
 function pickFortune(clientX, clientY, charge = 1) {
@@ -160,6 +282,8 @@ function revealFortune(clientX, clientY, charge = 1) {
   readingLabel.textContent = fortune.label;
   fortuneTitle.textContent = fortune.title;
   fortuneMessage.textContent = fortune.message;
+  lineTip.classList.remove("is-visible");
+  lineMessage.textContent = "名前を入れると、送る一言が出ます。";
   fortuneSpell.textContent = fortune.spell;
   fortuneScore.textContent = `星雷度 ${fortune.score}`;
   fortuneAction.textContent = `${fortune.action} / ${fortune.lucky}`;
@@ -184,7 +308,7 @@ function revealLoveFortune(clientX, clientY, charge = 1) {
     return;
   }
 
-  const seed = textSeed(`${nameA}|${nameB}`) + Math.round(charge * 101);
+  const seed = textSeed(`${nameA}|${nameB}`) + daySeed() + Math.round(charge * 101);
   const wave = Math.abs(Math.sin(seed * 0.00091) * 10000);
   const score = Math.round(clamp(52 + (wave % 43) + charge * 3, 1, 99));
   const title = loveTitles[seed % loveTitles.length];
@@ -192,18 +316,23 @@ function revealLoveFortune(clientX, clientY, charge = 1) {
   const spell = loveSpells[Math.floor(wave * 1.7) % loveSpells.length];
   const constellation = constellations[Math.floor(wave * 2.1) % constellations.length];
   const lucky = ["桃色", "白", "金", "水色", "菫色", "群青"][Math.floor(wave * 2.8) % 6];
+  const relation = relationTypes[Math.floor(wave * 3.7) % relationTypes.length];
+  const line = pickLineMessage(nameB, score, wave);
 
   readingCount += 1;
   latestFortuneAt = performance.now();
-  readingLabel.textContent = `${nameA} × ${nameB} / 恋愛相性`;
+  readingLabel.textContent = `${nameA} × ${nameB} / ${relation}`;
   fortuneTitle.textContent = title;
   fortuneMessage.textContent = message;
+  lineMessage.textContent = line;
+  lineTip.classList.add("is-visible");
   fortuneSpell.textContent = spell;
   fortuneScore.textContent = `相性 ${score}%`;
-  fortuneAction.textContent = `ラッキー距離 / ${lucky}`;
+  fortuneAction.textContent = `${score >= 82 ? "近め" : score >= 68 ? "半歩ずつ" : "ゆっくり"} / ${lucky}`;
   fortuneConstellation.textContent = constellation;
   reading.classList.remove("is-revealed");
 
+  addSoulStars(nameA, nameB, score);
   addSkyStrike(clientX, clientY, 1.05 + score / 120);
   addLens(clientX, clientY, 1.2);
   burst(clientX, clientY, 1.35);
@@ -363,6 +492,38 @@ function addLens(clientX, clientY, power = 1) {
     speed: 16 + power * 6,
     wobble: Math.random() * Math.PI * 2,
   });
+}
+
+function addSoulStars(nameA, nameB, score) {
+  soulStars.length = 0;
+  const centerX = effectsCanvas.width * 0.5;
+  const centerY = effectsCanvas.height * 0.45;
+  const spread = effectsCanvas.width < 760 ? effectsCanvas.width * 0.28 : 210;
+  const seedA = textSeed(nameA);
+  const seedB = textSeed(nameB);
+
+  soulStars.push(
+    {
+      x: centerX - spread,
+      y: centerY + Math.sin(seedA) * 60,
+      targetX: centerX - 34,
+      targetY: centerY - 18,
+      radius: 9 + (seedA % 8),
+      life: 260,
+      maxLife: 260,
+      score,
+    },
+    {
+      x: centerX + spread,
+      y: centerY + Math.cos(seedB) * 60,
+      targetX: centerX + 34,
+      targetY: centerY + 18,
+      radius: 9 + (seedB % 8),
+      life: 260,
+      maxLife: 260,
+      score,
+    }
+  );
 }
 
 function makeBoltPoints(x1, y1, x2, y2, segments, jaggedness) {
@@ -734,6 +895,75 @@ function paintLenses(time) {
   }
 }
 
+function paintSoulStars(time) {
+  if (soulStars.length < 2) return;
+
+  const [a, b] = soulStars;
+  const alpha = clamp(Math.min(a.life, b.life) / a.maxLife, 0, 1);
+  const pulse = 0.78 + Math.sin(time * 0.006) * 0.22;
+  const mx = (a.x + b.x) * 0.5;
+  const my = (a.y + b.y) * 0.5;
+
+  fx.save();
+  fx.globalCompositeOperation = "lighter";
+
+  for (const soul of soulStars) {
+    soul.x += (soul.targetX - soul.x) * 0.038;
+    soul.y += (soul.targetY - soul.y) * 0.038;
+    soul.life -= 1;
+
+    const glowRadius = soul.radius * (8 + soul.score / 18) * pulse;
+    const glow = fx.createRadialGradient(soul.x, soul.y, 0, soul.x, soul.y, glowRadius);
+    glow.addColorStop(0, `rgba(255, 245, 205, ${alpha * 0.72})`);
+    glow.addColorStop(0.34, `rgba(255, 115, 148, ${alpha * 0.32})`);
+    glow.addColorStop(1, "rgba(109, 93, 242, 0)");
+    fx.fillStyle = glow;
+    fx.beginPath();
+    fx.arc(soul.x, soul.y, glowRadius, 0, Math.PI * 2);
+    fx.fill();
+
+    fx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    fx.beginPath();
+    fx.arc(soul.x, soul.y, soul.radius * pulse, 0, Math.PI * 2);
+    fx.fill();
+  }
+
+  const scoreAlpha = alpha * clamp(a.score / 100, 0.35, 1);
+  fx.lineCap = "round";
+  fx.lineWidth = 2.4 + a.score * 0.035;
+  fx.strokeStyle = `rgba(255, 213, 137, ${scoreAlpha})`;
+  fx.beginPath();
+  fx.moveTo(a.x, a.y);
+  fx.bezierCurveTo(mx - 36, my - 86, mx + 36, my - 86, b.x, b.y);
+  fx.stroke();
+
+  fx.lineWidth = 1.2;
+  fx.strokeStyle = `rgba(255, 126, 169, ${scoreAlpha * 0.75})`;
+  fx.beginPath();
+  fx.moveTo(a.x, a.y);
+  fx.bezierCurveTo(mx - 56, my + 72, mx + 56, my + 72, b.x, b.y);
+  fx.stroke();
+
+  if (Math.random() > 0.72) {
+    sparks.push({
+      x: mx + (Math.random() - 0.5) * 80,
+      y: my + (Math.random() - 0.5) * 70,
+      vx: (Math.random() - 0.5) * 2,
+      vy: (Math.random() - 0.5) * 2,
+      radius: 0.8 + Math.random() * 1.8,
+      life: 24 + Math.random() * 18,
+      maxLife: 42,
+      hue: Math.random(),
+    });
+  }
+
+  fx.restore();
+
+  for (let i = soulStars.length - 1; i >= 0; i -= 1) {
+    if (soulStars[i].life <= 0) soulStars.splice(i, 1);
+  }
+}
+
 function strokeBolt(points, alpha, width, jitter) {
   fx.lineCap = "round";
   fx.lineJoin = "round";
@@ -806,6 +1036,7 @@ function paintEffects(time) {
   fx.globalCompositeOperation = "lighter";
   paintRibbons(time);
   paintLenses(time);
+  paintSoulStars(time);
   paintWells(time);
   paintLightnings();
 
