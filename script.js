@@ -5,6 +5,9 @@ const fx = effectsCanvas.getContext("2d");
 const buffer = document.createElement("canvas");
 const bufferCtx = buffer.getContext("2d", { alpha: false });
 const reading = document.querySelector("#reading");
+const loveForm = document.querySelector("#love-form");
+const nameAInput = document.querySelector("#name-a");
+const nameBInput = document.querySelector("#name-b");
 const readingLabel = document.querySelector("#reading-label");
 const fortuneTitle = document.querySelector("#fortune-title");
 const fortuneMessage = document.querySelector("#fortune-message");
@@ -93,9 +96,35 @@ const spells = [
   "夜の端っこに、返事はもう置いてある。",
 ];
 const comboTitles = ["一回目の星読み", "二連星モード", "三雷覚醒", "星雷ループ"];
+const loveTitles = ["引力強めの二連星", "近づくほど光る相性", "雷が走る予感", "ゆっくり育つ星雲", "似てないから惹かれる軌道", "偶然が味方する距離"];
+const loveMessages = [
+  "会話のテンポが鍵です。短いやり取りでも、気持ちの温度が伝わりやすい組み合わせです。",
+  "急ぎすぎると星が散ります。相手のペースを尊重すると、自然に距離が縮まります。",
+  "違いが魅力になる相性です。分かり合おうとするより、面白がる方がうまくいきます。",
+  "一緒に何かを作ると運気が上がります。小さな予定や共通の遊びが火種になります。",
+  "沈黙も悪くない組み合わせです。無理に盛り上げず、安心できる空気を大切に。",
+  "タイミングが合うほど強く光ります。誘うなら軽く、でも言葉はまっすぐが吉です。",
+];
+const loveSpells = [
+  "近づきすぎず、でも目を逸らさない。",
+  "好きの前に、楽しいをひとつ増やす。",
+  "相手の星を変えず、自分の光で照らす。",
+  "返信より、余韻を大事にする。",
+  "言えない気持ちは、やさしい行動に変える。",
+  "今日は小さな勇気が、恋の雷になる。",
+];
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function textSeed(value) {
+  let hash = 2166136261;
+  for (const char of value.trim()) {
+    hash ^= char.codePointAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return Math.abs(hash >>> 0);
 }
 
 function pickFortune(clientX, clientY, charge = 1) {
@@ -142,6 +171,42 @@ function revealFortune(clientX, clientY, charge = 1) {
     spawnComet();
   }
 
+  requestAnimationFrame(() => {
+    reading.classList.add("is-revealed");
+  });
+}
+
+function revealLoveFortune(clientX, clientY, charge = 1) {
+  const nameA = nameAInput.value.trim();
+  const nameB = nameBInput.value.trim();
+  if (!nameA || !nameB) {
+    revealFortune(clientX, clientY, charge);
+    return;
+  }
+
+  const seed = textSeed(`${nameA}|${nameB}`) + Math.round(charge * 101);
+  const wave = Math.abs(Math.sin(seed * 0.00091) * 10000);
+  const score = Math.round(clamp(52 + (wave % 43) + charge * 3, 1, 99));
+  const title = loveTitles[seed % loveTitles.length];
+  const message = loveMessages[Math.floor(wave) % loveMessages.length];
+  const spell = loveSpells[Math.floor(wave * 1.7) % loveSpells.length];
+  const constellation = constellations[Math.floor(wave * 2.1) % constellations.length];
+  const lucky = ["桃色", "白", "金", "水色", "菫色", "群青"][Math.floor(wave * 2.8) % 6];
+
+  readingCount += 1;
+  latestFortuneAt = performance.now();
+  readingLabel.textContent = `${nameA} × ${nameB} / 恋愛相性`;
+  fortuneTitle.textContent = title;
+  fortuneMessage.textContent = message;
+  fortuneSpell.textContent = spell;
+  fortuneScore.textContent = `相性 ${score}%`;
+  fortuneAction.textContent = `ラッキー距離 / ${lucky}`;
+  fortuneConstellation.textContent = constellation;
+  reading.classList.remove("is-revealed");
+
+  addSkyStrike(clientX, clientY, 1.05 + score / 120);
+  addLens(clientX, clientY, 1.2);
+  burst(clientX, clientY, 1.35);
   requestAnimationFrame(() => {
     reading.classList.add("is-revealed");
   });
@@ -418,7 +483,11 @@ function releaseWell(pointerId, clientX, clientY) {
   addLens(clientX, clientY, 1.6 + Math.min(well.age / 130, 1.5));
   addSkyStrike(clientX, clientY, 1.2 + Math.min(well.age / 130, 1.4));
   burst(clientX, clientY, 1.7 + Math.min(well.age / 110, 1.4));
-  revealFortune(clientX, clientY, charge);
+  if (nameAInput.value.trim() && nameBInput.value.trim()) {
+    revealLoveFortune(clientX, clientY, charge);
+  } else {
+    revealFortune(clientX, clientY, charge);
+  }
 }
 
 function spawnComet() {
@@ -931,7 +1000,18 @@ againButton.addEventListener("click", () => {
   disturb(x, y, 980, 1.2);
   addSkyStrike(x, y, 0.95);
   burst(x, y, 1.25);
-  revealFortune(x, y, 1.4 + Math.random() * 0.9);
+  if (nameAInput.value.trim() && nameBInput.value.trim()) {
+    revealLoveFortune(x, y, 1.4 + Math.random() * 0.9);
+  } else {
+    revealFortune(x, y, 1.4 + Math.random() * 0.9);
+  }
+});
+loveForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const x = window.innerWidth * 0.5;
+  const y = window.innerHeight * 0.44;
+  disturb(x, y, 1120, 1.35);
+  revealLoveFortune(x, y, 1.8);
 });
 
 requestAnimationFrame(animate);

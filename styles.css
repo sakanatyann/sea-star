@@ -133,6 +133,59 @@ h1 {
   transform: translateY(-0.2rem);
 }
 
+.love-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto;
+  gap: 0.45rem;
+  align-items: center;
+  margin-bottom: 0.9rem;
+  pointer-events: auto;
+}
+
+.love-form input,
+.love-form button {
+  min-width: 0;
+  min-height: 2.35rem;
+  color: var(--ink);
+  border: 1px solid rgba(255, 249, 237, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 760;
+  letter-spacing: 0;
+}
+
+.love-form input {
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+}
+
+.love-form input::placeholder {
+  color: rgba(255, 249, 237, 0.46);
+}
+
+.love-form input:focus {
+  outline: 2px solid rgba(247, 210, 108, 0.35);
+  outline-offset: 1px;
+}
+
+.love-form span {
+  color: rgba(247, 210, 108, 0.9);
+  font-weight: 900;
+}
+
+.love-form button {
+  padding: 0.55rem 0.72rem;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.love-form button:hover {
+  border-color: rgba(255, 115, 148, 0.72);
+  background: rgba(255, 115, 148, 0.14);
+}
+
 .reading-label {
   margin: 0 0 0.55rem;
   color: rgba(255, 249, 237, 0.66);
@@ -227,6 +280,15 @@ h1 {
 
   .reading {
     margin-bottom: 0.6rem;
+  }
+
+  .love-form {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .love-form button {
+    grid-column: 1 / -1;
+    width: 100%;
   }
 
   .again-button {
