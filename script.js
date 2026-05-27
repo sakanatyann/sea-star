@@ -4,6 +4,15 @@ const ctx = fieldCanvas.getContext("2d", { alpha: false });
 const fx = effectsCanvas.getContext("2d");
 const buffer = document.createElement("canvas");
 const bufferCtx = buffer.getContext("2d", { alpha: false });
+const reading = document.querySelector("#reading");
+const readingLabel = document.querySelector("#reading-label");
+const fortuneTitle = document.querySelector("#fortune-title");
+const fortuneMessage = document.querySelector("#fortune-message");
+const fortuneSpell = document.querySelector("#fortune-spell");
+const fortuneScore = document.querySelector("#fortune-score");
+const fortuneAction = document.querySelector("#fortune-action");
+const fortuneConstellation = document.querySelector("#fortune-constellation");
+const againButton = document.querySelector("#again-button");
 
 const sim = {
   cols: 0,
@@ -23,9 +32,119 @@ const wells = [];
 const comets = [];
 const ribbons = [];
 const lenses = [];
+const lightnings = [];
+let stormFlash = 0;
+let latestFortuneAt = 0;
+let readingCount = 0;
+
+const fortunes = [
+  {
+    title: "流れ星の追い風",
+    message: "動き出すほど運が整います。迷っていることは、小さく試すだけで道が見えます。",
+    action: "最初の一歩",
+  },
+  {
+    title: "静かな雷鳴",
+    message: "言葉にする前の直感が強い日です。すぐ答えを出さず、胸の奥の違和感を拾ってください。",
+    action: "深呼吸",
+  },
+  {
+    title: "銀河の再配置",
+    message: "予定を少し組み替えると運気が上がります。余白を作るほど、大事なものが入ってきます。",
+    action: "予定整理",
+  },
+  {
+    title: "金色の星座",
+    message: "人との縁が光ります。短い連絡や一言の感謝が、思ったより大きく返ってきます。",
+    action: "連絡する",
+  },
+  {
+    title: "青白い閃光",
+    message: "集中力が鋭くなっています。難しい作業は今日のうちに少しだけ進めると勝ちです。",
+    action: "一点集中",
+  },
+  {
+    title: "星雲の休息",
+    message: "急がない方が強い日です。休むことも前進なので、体力を未来へ残してください。",
+    action: "早めに休む",
+  },
+  {
+    title: "双子星の合図",
+    message: "一人で抱えていたことに助けが入ります。頼る相手を選べば、話は軽くなります。",
+    action: "相談する",
+  },
+  {
+    title: "遠雷の変化",
+    message: "少し怖い変化ほど、今のあなたには必要な刺激です。無理なく近づいてみてください。",
+    action: "選び直す",
+  },
+];
+
+const labels = ["今日の兆し", "星の返事", "雷の助言", "今夜の導き"];
+const constellations = ["雷魚座", "月雫座", "夜風座", "流砂座", "白火座", "星猫座", "遠灯座", "小嵐座"];
+const spells = [
+  "迷いは小さく砕いて、星屑として進め。",
+  "焦げた願いほど、次の光を知っている。",
+  "今日の偶然を、ひとつだけ信じてみて。",
+  "まだ言葉にならない方角へ、半歩だけ。",
+  "静かな方を選ぶと、雷は味方になる。",
+  "見送ったものが、別の入口を連れてくる。",
+  "強く願うより、軽く始める方が速い。",
+  "夜の端っこに、返事はもう置いてある。",
+];
+const comboTitles = ["一回目の星読み", "二連星モード", "三雷覚醒", "星雷ループ"];
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function pickFortune(clientX, clientY, charge = 1) {
+  const seed =
+    clientX * 0.017 +
+    clientY * 0.029 +
+    charge * 0.071 +
+    stars.length * 0.003 +
+    Date.now() * 0.00013;
+  const wave = Math.abs(Math.sin(seed) * 10000);
+  const item = fortunes[Math.floor(wave) % fortunes.length];
+  const score = Math.round(clamp(58 + (wave % 39) + charge * 4, 1, 99));
+  const lucky = ["金", "白", "群青", "薄桃", "水色", "菫色"][Math.floor(wave * 1.7) % 6];
+  const combo = comboTitles[Math.min(readingCount, comboTitles.length - 1)];
+
+  return {
+    ...item,
+    label: `${labels[Math.floor(wave * 2.3) % labels.length]} / ${combo}`,
+    score,
+    lucky,
+    spell: spells[Math.floor(wave * 3.1) % spells.length],
+    constellation: constellations[Math.floor(wave * 2.9) % constellations.length],
+  };
+}
+
+function revealFortune(clientX, clientY, charge = 1) {
+  const now = performance.now();
+  if (now - latestFortuneAt < 520) return;
+  latestFortuneAt = now;
+  readingCount += 1;
+
+  const fortune = pickFortune(clientX, clientY, charge);
+  readingLabel.textContent = fortune.label;
+  fortuneTitle.textContent = fortune.title;
+  fortuneMessage.textContent = fortune.message;
+  fortuneSpell.textContent = fortune.spell;
+  fortuneScore.textContent = `星雷度 ${fortune.score}`;
+  fortuneAction.textContent = `${fortune.action} / ${fortune.lucky}`;
+  fortuneConstellation.textContent = fortune.constellation;
+  reading.classList.remove("is-revealed");
+
+  if (readingCount % 3 === 0) {
+    addSkyStrike(clientX, clientY, 1.35);
+    spawnComet();
+  }
+
+  requestAnimationFrame(() => {
+    reading.classList.add("is-revealed");
+  });
 }
 
 function resize() {
@@ -181,6 +300,92 @@ function addLens(clientX, clientY, power = 1) {
   });
 }
 
+function makeBoltPoints(x1, y1, x2, y2, segments, jaggedness) {
+  const points = [{ x: x1, y: y1 }];
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const normal = Math.atan2(dy, dx) + Math.PI / 2;
+  let previousOffset = 0;
+
+  for (let i = 1; i < segments; i += 1) {
+    const t = i / segments;
+    const arc = Math.sin(t * Math.PI);
+    const chaos = (Math.random() - 0.5) * jaggedness * arc;
+    const offset = previousOffset * 0.52 + chaos;
+    previousOffset = offset;
+    points.push({
+      x: x1 + dx * t + Math.cos(normal) * offset,
+      y: y1 + dy * t + Math.sin(normal) * offset,
+    });
+  }
+
+  points.push({ x: x2, y: y2 });
+  return points;
+}
+
+function addLightning(fromX, fromY, toX, toY, power = 1) {
+  const start = toPoint(fromX, fromY);
+  const end = toPoint(toX, toY);
+  const length = Math.hypot(end.px - start.px, end.py - start.py);
+  const segments = Math.round(clamp(length / 34, 8, 26) + power * 5);
+  const jaggedness = 18 + power * 38 + length * 0.045;
+  const points = makeBoltPoints(start.px, start.py, end.px, end.py, segments, jaggedness);
+  const branches = [];
+
+  for (let i = 2; i < points.length - 2; i += 1) {
+    if (Math.random() > 0.34) continue;
+    const base = points[i];
+    const mainAngle = Math.atan2(end.py - start.py, end.px - start.px);
+    const angle = mainAngle + (Math.random() > 0.5 ? 1 : -1) * (0.45 + Math.random() * 0.75);
+    const branchLength = (22 + Math.random() * 86) * power * (1 - i / points.length + 0.45);
+    branches.push(
+      makeBoltPoints(
+        base.x,
+        base.y,
+        base.x + Math.cos(angle) * branchLength,
+        base.y + Math.sin(angle) * branchLength,
+        4 + Math.round(Math.random() * 4),
+        jaggedness * 0.22
+      )
+    );
+  }
+
+  lightnings.push({
+    points,
+    branches,
+    life: 7 + Math.round(power * 5),
+    maxLife: 12,
+    width: 1.25 + power * 2.15,
+    jitter: 0.8 + power * 1.8,
+  });
+
+  if (lightnings.length > 34) lightnings.splice(0, lightnings.length - 34);
+  stormFlash = Math.min(0.34, stormFlash + 0.055 * power);
+}
+
+function addSkyStrike(clientX, clientY, power = 1) {
+  const point = toPoint(clientX, clientY);
+  const startX = clientX + (Math.random() - 0.5) * window.innerWidth * 0.52;
+  addLightning(startX, -20, clientX, clientY, power);
+  if (Math.random() > 0.32) {
+    addLightning(clientX, clientY, clientX + (Math.random() - 0.5) * 150, clientY + 70 + Math.random() * 110, power * 0.42);
+  }
+  disturb(clientX, clientY, 700 * power, 1.1);
+  addLens(clientX, clientY, power * 0.85);
+
+  for (const star of stars) {
+    const dx = star.x - point.px;
+    const dy = star.y - point.py;
+    const distance = Math.max(1, Math.hypot(dx, dy));
+    if (distance < 280 * power) {
+      const force = (1 - distance / (280 * power)) * 6.4 * power;
+      star.vx += (dx / distance) * force;
+      star.vy += (dy / distance) * force;
+      star.twinkle += force * 0.6;
+    }
+  }
+}
+
 function createWell(pointerId, clientX, clientY) {
   const point = toPoint(clientX, clientY);
   wells.push({
@@ -207,10 +412,13 @@ function releaseWell(pointerId, clientX, clientY) {
   if (!well) return;
 
   updateWell(pointerId, clientX, clientY);
+  const charge = 1 + Math.min(well.age / 120, 2);
   well.released = true;
   well.power = Math.max(well.power, 1.2);
   addLens(clientX, clientY, 1.6 + Math.min(well.age / 130, 1.5));
+  addSkyStrike(clientX, clientY, 1.2 + Math.min(well.age / 130, 1.4));
   burst(clientX, clientY, 1.7 + Math.min(well.age / 110, 1.4));
+  revealFortune(clientX, clientY, charge);
 }
 
 function spawnComet() {
@@ -457,6 +665,69 @@ function paintLenses(time) {
   }
 }
 
+function strokeBolt(points, alpha, width, jitter) {
+  fx.lineCap = "round";
+  fx.lineJoin = "round";
+
+  const warped = points.map((point, index) => {
+    if (index === 0 || index === points.length - 1) return point;
+    return {
+      x: point.x + (Math.random() - 0.5) * jitter,
+      y: point.y + (Math.random() - 0.5) * jitter,
+    };
+  });
+
+  fx.strokeStyle = `rgba(74, 183, 255, ${alpha * 0.16})`;
+  fx.lineWidth = width * 8.5;
+  fx.beginPath();
+  fx.moveTo(warped[0].x, warped[0].y);
+  for (let i = 1; i < warped.length; i += 1) fx.lineTo(warped[i].x, warped[i].y);
+  fx.stroke();
+
+  fx.strokeStyle = `rgba(136, 226, 255, ${alpha * 0.34})`;
+  fx.lineWidth = width * 3.4;
+  fx.beginPath();
+  fx.moveTo(warped[0].x, warped[0].y);
+  for (let i = 1; i < warped.length; i += 1) fx.lineTo(warped[i].x, warped[i].y);
+  fx.stroke();
+
+  fx.strokeStyle = `rgba(232, 250, 255, ${alpha * 0.92})`;
+  fx.lineWidth = Math.max(1, width * 1.05);
+  fx.beginPath();
+  fx.moveTo(warped[0].x, warped[0].y);
+  for (let i = 1; i < warped.length; i += 1) fx.lineTo(warped[i].x, warped[i].y);
+  fx.stroke();
+
+  fx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+  fx.lineWidth = Math.max(0.7, width * 0.32);
+  fx.beginPath();
+  fx.moveTo(warped[0].x, warped[0].y);
+  for (let i = 1; i < warped.length; i += 1) fx.lineTo(warped[i].x, warped[i].y);
+  fx.stroke();
+}
+
+function paintLightnings() {
+  for (let i = lightnings.length - 1; i >= 0; i -= 1) {
+    const bolt = lightnings[i];
+    bolt.life -= 1;
+    const alpha = clamp(bolt.life / bolt.maxLife, 0, 1);
+    const flicker = Math.random() > 0.18 ? 0.72 + Math.random() * 0.28 : 0.22;
+
+    strokeBolt(bolt.points, alpha * flicker, bolt.width, bolt.jitter);
+    for (const branch of bolt.branches) {
+      strokeBolt(branch, alpha * 0.52 * flicker, bolt.width * 0.34, bolt.jitter * 1.2);
+    }
+
+    if (bolt.life <= 0) lightnings.splice(i, 1);
+  }
+
+  if (stormFlash > 0.01) {
+    fx.fillStyle = `rgba(206, 239, 255, ${stormFlash})`;
+    fx.fillRect(0, 0, effectsCanvas.width, effectsCanvas.height);
+    stormFlash *= 0.58;
+  }
+}
+
 function paintEffects(time) {
   fx.clearRect(0, 0, effectsCanvas.width, effectsCanvas.height);
   paintConstellations(time);
@@ -467,6 +738,7 @@ function paintEffects(time) {
   paintRibbons(time);
   paintLenses(time);
   paintWells(time);
+  paintLightnings();
 
   for (const star of stars) {
     star.twinkle += 0.018 + star.radius * 0.004;
@@ -596,6 +868,12 @@ function animate(time) {
     spawnComet();
   }
 
+  if (sim.idlePulse % 360 === 0 && pointers.size === 0 && Math.random() > 0.45) {
+    const x = window.innerWidth * (0.18 + Math.random() * 0.64);
+    const y = window.innerHeight * (0.22 + Math.random() * 0.52);
+    addSkyStrike(x, y, 0.58);
+  }
+
   requestAnimationFrame(animate);
 }
 
@@ -604,6 +882,7 @@ function onPointerDown(event) {
   pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
   createWell(event.pointerId, event.clientX, event.clientY);
   disturb(event.clientX, event.clientY, 1050, 1.3);
+  addSkyStrike(event.clientX, event.clientY, 0.82);
   burst(event.clientX, event.clientY, 1.15);
 }
 
@@ -624,6 +903,7 @@ function onPointerMove(event) {
   if (distance > 8) {
     const power = clamp(distance / 42, 0.35, 1.35);
     addRibbon(last.x, last.y, event.clientX, event.clientY, power);
+    if (Math.random() > 0.62) addLightning(last.x, last.y, event.clientX, event.clientY, power * 0.42);
     burst(event.clientX, event.clientY, power);
   }
   updateWell(event.pointerId, event.clientX, event.clientY);
@@ -645,5 +925,13 @@ fieldCanvas.addEventListener("pointerdown", onPointerDown);
 fieldCanvas.addEventListener("pointermove", onPointerMove);
 fieldCanvas.addEventListener("pointerup", onPointerUp);
 fieldCanvas.addEventListener("pointercancel", onPointerUp);
+againButton.addEventListener("click", () => {
+  const x = window.innerWidth * (0.35 + Math.random() * 0.3);
+  const y = window.innerHeight * (0.32 + Math.random() * 0.24);
+  disturb(x, y, 980, 1.2);
+  addSkyStrike(x, y, 0.95);
+  burst(x, y, 1.25);
+  revealFortune(x, y, 1.4 + Math.random() * 0.9);
+});
 
 requestAnimationFrame(animate);

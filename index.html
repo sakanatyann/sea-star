@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Touch Stars</title>
+    <title>星雷占い</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -11,7 +11,24 @@
       <canvas id="water" aria-hidden="true"></canvas>
       <canvas id="effects" aria-hidden="true"></canvas>
       <div class="surface-glow"></div>
-      <div class="hint">押して星を集めて、離して爆ぜる</div>
+      <section class="oracle" aria-live="polite">
+        <div class="oracle-top">
+          <p class="eyebrow">星雷占い</p>
+          <h1>指先で星を起こす</h1>
+        </div>
+        <article class="reading" id="reading">
+          <p class="reading-label" id="reading-label">今日の兆し</p>
+          <h2 id="fortune-title">まだ星は眠っています</h2>
+          <p id="fortune-message">画面を長押しして、離すと星雷が答えます。</p>
+          <p class="spell" id="fortune-spell">星が起きるまで、指先を静かに置いて。</p>
+          <div class="fortune-meta">
+            <span id="fortune-score">--</span>
+            <span id="fortune-action">星待ち</span>
+            <span id="fortune-constellation">未観測</span>
+          </div>
+        </article>
+        <button class="again-button" id="again-button" type="button">もう一度</button>
+      </section>
     </main>
     <script src="script.js"></script>
   </body>
